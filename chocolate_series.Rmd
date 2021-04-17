@@ -1,0 +1,117 @@
+---
+title: "Chocolate Series"
+author: "Mathilde Kaploun"
+date: "4/6/2021"
+output: 
+    epuRate::epurate:
+        toc: TRUE
+        number_sections: FALSE
+        code_folding: "show"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Opening the data
+
+Let's import our packages :
+
+```{r}
+library(dplyr)
+library(readr)
+library(lubridate)
+library(ggplot2)
+```
+
+Opening the csv : 
+
+```{r}
+series = read.csv('valeurs_mensuelles.csv', sep=';')
+```
+
+## Our data 
+
+### General presentation
+
+<!-- Que représente la série choisie ? (secteur, périmètre, traitements éventuels, transformation logarithmisque ...) -->
+
+The time series under study covers the manufacture of cocoa, chocolate and confectionery products between January 1990 and January 2021. This series is part of the CVS-CJO index of industrial production, which makes it possible to follow the monthly evolution of industrial activity in France and the construction industry, in particular here the index of industrial production of chocolate, cocoa and confectionery products. Moreover, it is an aggregated series corrected for seasonal variations and working days.
+
+There's no particular post-treatment of the data.
+
+All the values are marked as normal (A) so we're going to drop the rating column and rectify the type of the period column to prepare for the analysis.
+
+```{r}
+data = subset(series, select=-idBank)
+data$Période = ym(data$Période)
+data
+```
+
+### Stationnarisation
+
+<!-- Transformer si besoin la série pour la rendre stationnaire (différenciation, suppresssion de la tendance déterministe ...). Justifier soigneusement vos choix -->
+
+Let's start by plotting the series to check if it's stationnary and if there are any seasonalities to correct. There shouldn't be any since the series is already differenciated and unseasoned.
+
+```{r}
+plot(data, type='l')
+```
+
+All seasonalities have already been rectified as expected. However, the series definitely displays trends which make it non-stationnary, and that we have to correct through differenciation.
+
+```{r}
+untrend = diff(data$Indice, 1)
+plot(untrend, type='l')
+```
+
+Let's check that now the series is stationnary with a Phillips-Perron test : 
+```{r}
+PP.test(as.ts(data$Indice))
+```
+
+The p-value is inferior to 0.05 so the hypothesis of a null unitary root is rejected at 95%. The series is stationnary.
+
+
+
+### Graphical representation
+
+<!-- Représenter graphiquement la série choisie avant et après transformation -->
+
+## ARMA Models
+
+### An ARMA Model
+
+<!-- Choisir, en le justifiant, un modèle ARMA(p, q) pour votre série corrigée Xt. Estimer les paramètres du modèle et vérifier sa validité. -->
+
+Let's start by plotting the ACF and PACF in order to determine the parameters of the ARMA model we are going to fit :
+
+```{r}
+acf(untrend)
+pacf(untrend)
+```
+
+The autocorellation function is significant until p = 2 and the partial autocorrelation function until q = 3. We will therefore try to fit an ARMA(2, 3).
+### ARIMA model
+
+<!-- Exprimer le modèle ARIMA(p,d,q) pour la série choisie -->
+
+## Predictions
+
+<!-- On note T la longueur de la série. On suppose que les résidus de la série sont gaussiens. -->
+
+### Future values
+
+<!-- Ecrire l'équation vérifiée par la région de confiance de niveau alpha sur les valeurs futures (XT+1, XT+2) -->
+
+### Hypotheses
+
+<!-- Préciser les hypothèses utilisées pour obtenir cette région -->
+
+### Graphical representation
+
+<!-- Représenter graphiquement cette région pour alpha = 95%. Commenter -->
+
+### Open question
+
+<!-- soit Yt une série stationnaire disponible de t = 1 à T. On suppose que YT+1 est disponible plus rapidement que XT+1. Sous quelles conditions cette information permet-elle d'améliorer la prévision de XT+1. -->
